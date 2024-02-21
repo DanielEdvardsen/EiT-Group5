@@ -1,7 +1,7 @@
 import nibabel as nib
 from nilearn import image, plotting
 from nilearn.decomposition import CanICA
-from nilearn.plotting import plot_prob_atlas
+from nilearn.plotting import plot_prob_atlas, plot_stat_map
 import csv
 
 path = 'fMRI_Data/sub-001/func/sub-001_task-Training_run-01_bold.nii'
@@ -44,8 +44,8 @@ while True:
         canica.fit(img)
         canica_components_img = canica.components_img_
 
-        fig = plot_prob_atlas(canica_components_img, title=f"CanICA genre={genres[i]}", view_type="filled_contours", bg_img=path_anat)
-        fig.savefig(f'Images/ICA_1-1_{i}.png')
+        fig = plot_prob_atlas(canica_components_img, title=f"CanICA genre={genres[i]}", view_type="filled_contours", bg_img=path_anat, colorbar=True, cmap="black_blue")
+        fig.savefig(f'Images/ICA_1-1_{i}({genres[i]}).png')
         i += 1
         # plotting.show()
     except Exception as e:
