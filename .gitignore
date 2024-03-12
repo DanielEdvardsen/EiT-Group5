@@ -3,3 +3,4 @@ nilearn_cache/
 frontend/fmri-visualization/public/genres_original/
 __pycache__/helper_funcs.cpython-38.pyc
 AnalysisMethods/__pycache__/helper_funcs.cpython-38.pyc
+__pycache__

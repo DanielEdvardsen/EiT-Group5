@@ -1,0 +1,5 @@
+pygame==2.5.0
+moderngl==5.8.2
+PyGLM==2.7.0
+numpy<1.25,>=1.21
+pywavefront
