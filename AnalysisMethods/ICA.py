@@ -22,6 +22,7 @@ canica = CanICA(
     standardize="zscore_sample",
     n_jobs=2,
     threshold="auto",
+    t_r=1.5,
 )
 path_anat = 'fMRI_Data/sub-001/anat/sub-001_T1w.nii'
 
