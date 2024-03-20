@@ -8,3 +8,7 @@
 /dataSources.local.xml
 # Zeppelin ignored files
 /ZeppelinRemoteNotebooks/
+# GitHub Copilot persisted chat sessions
+/copilot/chatSessions
+
+/genres_original/
