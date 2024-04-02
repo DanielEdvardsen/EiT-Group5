@@ -32,7 +32,7 @@ class MusicPlayer(QWidget):
         main_layout = QVBoxLayout()
 
         # Genre selection
-        genre_group_box = QGroupBox("Genres")  # Changed the title to 'Genres'
+        genre_group_box = QGroupBox("Genres")
         genre_layout = QVBoxLayout()
 
         genres = [genre for genre in os.listdir(MUSIC_DIR)]
@@ -54,7 +54,6 @@ class MusicPlayer(QWidget):
             self.subject_radio_buttons.append(radio_button)
             subject_layout.addWidget(radio_button)
         subject_group_box.setLayout(subject_layout)
-
         self.subject_radio_buttons[0].setChecked(True)
 
         # 3D Animation
@@ -117,10 +116,11 @@ class MusicPlayer(QWidget):
         self.pause_button.clicked.connect(self.media_player.pause)
         self.stop_button.clicked.connect(self.media_player.stop)
         self.next_button.clicked.connect(self.play_next_song)
-        self.previous_button.clicked.connect(self.play_previous_song)
+        self.previous_button.clicked.connect(lambda: self.play_next_song(forward=False))
 
         for radio_button in self.subject_radio_buttons:
             radio_button.clicked.connect(self.update_subject)
+
         for radio_button in self.genre_radio_buttons:
             radio_button.clicked.connect(self.update_genre)
 
@@ -133,6 +133,7 @@ class MusicPlayer(QWidget):
         for radio_button in self.genre_radio_buttons:
             if radio_button.isChecked():
                 self.genre = radio_button.text().lower()
+                self.play_song()
                 break
 
     def set_volume(self, value):
@@ -153,10 +154,15 @@ class MusicPlayer(QWidget):
 
     def load_song_list(self):
         """
-        Load the songs related to the current subject session.
+        Load the songs related to the current subjects' session.
         """
+        # check if path exist before attempting to read
+        if not os.path.exists(f'../dataset/sub-00{self.cur_subject}/func/sub-001_task-Test_run-01_events.tsv'):
+            print("No songs available for this subject.")
+            return
+
         df = pd.read_csv(
-            f'../dataset/sub-00{self.cur_subject}/func/sub-00{self.cur_subject}_task-Test_run-01_events.tsv', sep='\t')
+            f'../dataset/sub-00{self.cur_subject}/func/sub-001_task-Test_run-01_events.tsv', sep='\t')
         self.song_files = {}
 
         for index, row in df.iterrows():
@@ -168,12 +174,18 @@ class MusicPlayer(QWidget):
             if genre not in self.song_files:
                 self.song_files[genre] = {}
 
-            self.song_files[genre][track] = {'start': start, 'end': end}
+            # Use the index as the key in the inner dictionary
+            self.song_files[genre][index] = {'track': track, 'start': start, 'end': end}
+        print(self.song_files)
 
     def play_song(self):
         """
         Plays the first song the subject listened to in the selected genre.
         """
+        # If the player is paused, continue playing the current song
+        if self.media_player.state() == QMediaPlayer.PausedState:
+            self.media_player.play()
+            return
 
         if not self.genre:
             print("No genre selected.")
@@ -184,9 +196,8 @@ class MusicPlayer(QWidget):
             print("No songs available to play.")
             return
 
-        # Get the first song in the selected genre
+        # Get the first song and pad the string with zeros such that it adheres to the naming convention
         cur_song = list(self.song_files[self.genre].keys())[0]
-        # pad the string with zeros such that it adheres to the naming convention
         cur_song = str(cur_song).zfill(5)
 
         # Play the song
@@ -196,28 +207,32 @@ class MusicPlayer(QWidget):
         self.media_player.setMedia(QMediaContent(song_url))
         self.media_player.play()
 
-    def play_next_song(self):
+    def play_next_song(self, forward=True):
         # Check if there are any songs in the list
-        if not self.song_files:
-            print(self.song_files)
+        if not self.song_files or not self.genre or not self.song_files[self.genre]:
             print("No songs available to play.")
             return
+        print(self.song_files)
 
-        if self.current_song_index == len(self.song_files) - 1:
-            self.current_song_index = 0
+        # Get the list of tracks for the current genre
+        tracks = list(self.song_files[self.genre].keys())
+
+        # Find the current track index
+        current_track_index = self.current_song_index if self.current_song_index < len(tracks) else -1
+
+        if forward:
+            next_track_index = (current_track_index + 1) % len(tracks)
         else:
-            self.current_song_index += 1
+            next_track_index = (current_track_index - 1) % len(tracks)
+
+        # Get the next track
+        next_track = tracks[next_track_index]
 
         # Construct the new file name
-        next_song_file = f"{self.genre}.{str(self.current_song_index).zfill(5)}.wav"
-
-        # Check if the new file name exists in the list of songs
-        if next_song_file not in self.song_files:
-            print("No more songs available in this genre.")
-            return
+        next_song_file = f"{self.genre}.{str(next_track).zfill(5)}.wav"
 
         # Update the current song index
-        self.current_song_index = self.song_files.index(next_song_file)
+        self.current_song_index = next_track_index
 
         # Play the next song
         genre_dir = os.path.join(MUSIC_DIR, self.genre)  # Add this line
@@ -226,36 +241,10 @@ class MusicPlayer(QWidget):
         self.media_player.setMedia(QMediaContent(song_url))
         self.media_player.play()
 
-    def play_previous_song(self):
-        # Check if there are any songs in the list
-        if not self.song_files:
-            print("No songs available to play.")
-            return
-
-        if self.current_song_index == 0:
-            self.current_song_index = len(self.song_files) - 1
-        else:
-            self.current_song_index -= 1
-
-        # Construct the new file name
-        previous_song_file = f"{self.genre}.{str(self.current_song_index).zfill(5)}.wav"
-
-        # Check if the new file name exists in the list of songs
-        if previous_song_file not in self.song_files:
-            print("No more songs available in this genre.")
-            return
-
-        # Update the current song index
-        self.current_song_index = self.song_files.index(previous_song_file)
-
-        # Play the previous song
-        genre_dir = os.path.join(MUSIC_DIR, self.genre)
-        song_url = QUrl.fromLocalFile(os.path.join(genre_dir, previous_song_file))
-        print(f"Playing {previous_song_file}")
-        self.media_player.setMedia(QMediaContent(song_url))
-        self.media_player.play()
-
     def update_progress_bar(self, position):
+        """
+        Update the progress bar.
+        """
         self.playback_slider.setValue(position)
 
     def update_duration(self, duration):
