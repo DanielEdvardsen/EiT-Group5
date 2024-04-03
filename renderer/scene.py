@@ -1,4 +1,5 @@
 from pathlib import Path
+import struct
 
 from chunk import Chunk
 from meshes.brain_mesh import BrainMesh
@@ -20,11 +21,11 @@ class Scene:
         self.objects.append(BrainMesh(self.app))
 
         # the skybox
-        self.objects.append(SkyboxMesh(self.app))
+        # self.objects.append(SkyboxMesh(self.app))
 
     def update(self):
         pass
 
-    def render(self):
+    def render(self, context):
         for obj in self.objects:
             obj.render()

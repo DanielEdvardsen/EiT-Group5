@@ -10,8 +10,8 @@ class Player(Camera):
         super().__init__(position, yaw, pitch)
 
     def update(self):
-        self.keyboard_control()
-        self.mouse_control()
+        # self.keyboard_control()
+        # self.mouse_control()
         super().update()
 
     def mouse_control(self):

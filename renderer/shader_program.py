@@ -9,9 +9,9 @@ class ShaderProgram:
         self.player = app.player
         # -------- shaders -------- #
         self.chunk = self.get_program(shader_name="chunk")
-        self.skybox = self.get_program(shader_name="skybox")
+        # self.skybox = self.get_program(shader_name="skybox")
         self.brain = self.get_program(shader_name="brain")
-        self.skybox_texture = SkyboxTexture(app)
+        # self.skybox_texture = SkyboxTexture(app)
         # ------------------------- #
         self.set_uniforms_on_init()
 
@@ -25,16 +25,16 @@ class ShaderProgram:
         self.brain["m_model"].write(glm.mat4())
 
         # skybox
-        self.texture = self.skybox_texture.texture
-        self.skybox["u_texture_skybox"] = 0
-        self.texture.use(location=0)
-        self.skybox["m_proj"].write(self.player.m_proj)
-        self.skybox["m_view"].write(glm.mat4(glm.mat3(self.player.m_view)))
+        # self.texture = self.skybox_texture.texture
+        # self.skybox["u_texture_skybox"] = 0
+        # self.texture.use(location=0)
+        # self.skybox["m_proj"].write(self.player.m_proj)
+        # self.skybox["m_view"].write(glm.mat4(glm.mat3(self.player.m_view)))
 
     def update(self):
         self.chunk["m_view"].write(self.player.m_view)
         self.brain["m_view"].write(self.player.m_view)
-        self.skybox["m_view"].write(glm.mat4(glm.mat3(self.player.m_view)))
+        # self.skybox["m_view"].write(glm.mat4(glm.mat3(self.player.m_view)))
 
     def get_program(self, shader_name):
         with open(f"renderer/shaders/{shader_name}.vert") as file:

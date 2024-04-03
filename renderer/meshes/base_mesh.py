@@ -14,8 +14,7 @@ class BaseMesh:
         # vertex array object
         self.vao = None
 
-    def get_vertex_data(self) -> np.array:
-        ...
+    def get_vertex_data(self) -> np.array: ...
 
     def get_vao(self):
         vertex_data = self.get_vertex_data()
@@ -27,3 +26,6 @@ class BaseMesh:
 
     def render(self):
         self.vao.render()
+
+
+# vao = self.context.simple_vertex_array(program, vbo, "in_vert")
