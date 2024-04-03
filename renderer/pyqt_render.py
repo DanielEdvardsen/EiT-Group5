@@ -24,8 +24,8 @@ from PyQt5.QtWidgets import (
 from scene import Scene
 from shader_program import ShaderProgram
 
-MUSIC_DIR = "../genres_original/"
-DATASET_DIR = "../dataset/"
+MUSIC_DIR = "genres_original/"
+DATASET_DIR = "dataset/"
 
 
 class MusicPlayer(QWidget):
@@ -224,7 +224,7 @@ class MusicPlayer(QWidget):
         self.media_player.setPosition(start_time)
         self.media_player.play()
         self.media_player.positionChanged.connect(self.check_song_end)
-        
+
         # Start animation
         self.voxel_widget.scene.toggle_anim(self.voxel_widget.current_time)
 
