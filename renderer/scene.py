@@ -1,5 +1,6 @@
 from pathlib import Path
 import struct
+from pygame.time import get_ticks
 
 from chunk import Chunk
 from meshes.brain_mesh import BrainMesh
@@ -13,19 +14,46 @@ class Scene:
         self.app = app
         self.objects = []
 
-        # the activation
-        activation_01_path = Path("renderer/src/sub-001_activation-001.npy")
-        self.objects.append(Chunk(self.app, activation_01_path))
+        self.activations = []
+
+        self.play = False
+        self.current_frame = 0
+        self.ticks = 0
+
+        # the activations
+        for i in range(20):
+            act = Path(f'dataset/sub-001/func/run1/activation-{i}.npy')
+            self.activations.append(Chunk(self.app, act))
 
         # the brain model
         self.objects.append(BrainMesh(self.app))
 
         # the skybox
-        # self.objects.append(SkyboxMesh(self.app))
+        #self.objects.append(SkyboxMesh(self.app))
 
     def update(self):
-        pass
+        ...
 
-    def render(self, context):
+    def toggle_anim(self, time):
+        if not self.play:
+            self.play = True #Play
+            self.time = time
+            print("Play")
+        else:
+            self.play = False #Pause
+            print("Pause")
+
+    def reset(self):
+        self.play = False #Pause
+        self.current_frame = 0
+    
+    def render(self, context, elapsed):
         for obj in self.objects:
             obj.render()
+
+        if self.play:
+            if elapsed - self.time >= 1.5:
+                self.current_frame = (self.current_frame + 1) % 20
+                self.time = elapsed
+
+        self.activations[self.current_frame].render()

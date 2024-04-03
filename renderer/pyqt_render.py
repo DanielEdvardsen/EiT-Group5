@@ -88,9 +88,9 @@ class MusicPlayer(QWidget):
         main_layout.addWidget(animation_group_box)
 
         # voxel engine
-        voxel_widget = VoxelWidget()
-        voxel_widget.setMinimumSize(700, 700)
-        main_layout.addWidget(voxel_widget)
+        self.voxel_widget = VoxelWidget()
+        self.voxel_widget.setMinimumSize(700, 700)
+        main_layout.addWidget(self.voxel_widget)
 
 
         # Media Player Controls
@@ -137,8 +137,8 @@ class MusicPlayer(QWidget):
 
         # Logic
         self.play_button.clicked.connect(self.play_song)
-        self.pause_button.clicked.connect(self.media_player.pause)
-        self.stop_button.clicked.connect(self.media_player.stop)
+        self.pause_button.clicked.connect(self.pause_song)
+        self.stop_button.clicked.connect(self.stop_song)
         self.next_button.clicked.connect(self.play_next_song)
         self.previous_button.clicked.connect(lambda: self.play_next_song(forward=False))
         self.load_song_list()
@@ -215,6 +215,17 @@ class MusicPlayer(QWidget):
         song_url = QUrl.fromLocalFile(os.path.join(MUSIC_DIR, self.genre, f"{self.genre}.{cur_song}.wav"))
         self.media_player.setMedia(QMediaContent(song_url))
         self.media_player.play()
+
+        # Start animation
+        self.voxel_widget.scene.toggle_anim(self.voxel_widget.current_time)
+
+    def pause_song(self):
+        self.media_player.pause()
+        self.voxel_widget.scene.toggle_anim(self.voxel_widget.current_time)
+
+    def stop_song(self):
+        self.media_player.stop()
+        self.voxel_widget.scene.reset()
 
     def play_next_song(self, forward=True):
         # Check if there are any songs in the list
@@ -309,9 +320,11 @@ class VoxelWidget(QOpenGLWidget):
         self.scene.update()
 
         # Calculate delta_time and update time
-        current_time = time.time()  # You need to import time
-        self.delta_time = current_time - self.last_time
-        self.last_time = current_time
+        self.current_time = time.time()  # You need to import time
+        self.delta_time = self.current_time - self.last_time
+        self.last_time = self.current_time
+        
+        
 
     def resizeGL(self, w, h):
         # Adjust the viewport and projection matrix on resize
@@ -322,7 +335,7 @@ class VoxelWidget(QOpenGLWidget):
         self.updateGL()
         # Perform rendering here
         # self.ctx.clear(color=BG_COLOR)
-        self.scene.render(self.ctx)
+        self.scene.render(self.ctx, self.current_time)
 
         # Optionally, update the window title with FPS
         self.setWindowTitle(f"{1.0 / (self.delta_time + 1e-4):.0f} FPS")
@@ -355,10 +368,10 @@ class VoxelWidget(QOpenGLWidget):
 
         # Check if the angle delta is positive (scrolling up) or negative (scrolling down)
         if angle_delta < 0:
-            print("Scrolled Up")
+            print("Zoom in")
             self.player.move_forward(1)
         else:
-            print("Scrolled Down")
+            print("Zoom out")
             self.player.move_back(1)
 
 
