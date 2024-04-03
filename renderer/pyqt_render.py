@@ -2,35 +2,30 @@ import os
 import sys
 import time
 
+import moderngl as mgl
 import pandas as pd
+from PyQt5.QtCore import QTimer
 from PyQt5.QtCore import Qt, QUrl, QPoint
+from PyQt5.QtGui import QSurfaceFormat
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+from PyQt5.QtWidgets import QApplication, QMainWindow, QOpenGLWidget
 from PyQt5.QtWidgets import (
-    QApplication,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QRadioButton,
     QGroupBox,
     QPushButton,
     QSlider,
     QLabel,
-    QOpenGLWidget,
+    QComboBox,
 )
-
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QOpenGLWidget
-from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QSurfaceFormat, QOpenGLContext
-import moderngl as mgl
 
 from player import Player
 from scene import Scene
-from settings import *
 from shader_program import ShaderProgram
 
 MUSIC_DIR = "genres_original/"
-MESH_DIR = "/3d_files/"
+DATASET_DIR = "dataset/"
 
 
 class MusicPlayer(QWidget):
@@ -54,37 +49,37 @@ class MusicPlayer(QWidget):
         main_layout = QVBoxLayout()
 
         # Genre selection
-        genre_group_box = QGroupBox("Genres")  # Changed the title to 'Genres'
-        genre_layout = QVBoxLayout()
-
+        self.genre_combo_box = QComboBox()
         genres = [genre for genre in os.listdir(MUSIC_DIR)]
-        self.genre_radio_buttons = []
-        for genre in genres:
-            radio_button = QRadioButton(genre)
-            self.genre_radio_buttons.append(radio_button)
-            genre_layout.addWidget(radio_button)
+        self.genre_combo_box.addItems(genres)
+        self.genre_combo_box.currentIndexChanged.connect(
+            self.update_genre)
 
+        genre_group_box = QGroupBox("Genres")
+        genre_layout = QVBoxLayout()
+        genre_layout.addWidget(self.genre_combo_box)
         genre_group_box.setLayout(genre_layout)
+        self.genre = genres[0].lower()
 
-        # Subject group box
+        # Subject selection
+        self.subject_combo_box = QComboBox()
+        subjects = [str(i) for i in range(1, 6)]
+        self.subject_combo_box.addItems(subjects)
+        self.subject_combo_box.currentIndexChanged.connect(
+            self.update_subject)
+
         subject_group_box = QGroupBox("Subjects")
         subject_layout = QVBoxLayout()
-        subjects = [i for i in range(1, 6)]
-        self.subject_radio_buttons = []
-        for subject in subjects:
-            radio_button = QRadioButton(str(f"Subject: {subject}"))
-            self.subject_radio_buttons.append(radio_button)
-            subject_layout.addWidget(radio_button)
+        subject_layout.addWidget(self.subject_combo_box)
         subject_group_box.setLayout(subject_layout)
-
-        self.subject_radio_buttons[0].setChecked(True)
 
         # 3D Animation
         animation_group_box = QGroupBox("3D Animation")
         animation_layout = QVBoxLayout()
 
-        self.opengl_widget = QOpenGLWidget()
-        animation_layout.addWidget(self.opengl_widget)
+        #self.opengl_widget = QOpenGLWidget()
+        #self.opengl_widget.setMinimumSize(800, 600)
+        #animation_layout.addWidget(self.opengl_widget)
 
         animation_group_box.setLayout(animation_layout)
         group_boxes_layout = QHBoxLayout()
@@ -94,7 +89,9 @@ class MusicPlayer(QWidget):
 
         # voxel engine
         voxel_widget = VoxelWidget()
+        voxel_widget.setMinimumSize(700, 700)
         main_layout.addWidget(voxel_widget)
+
 
         # Media Player Controls
         controls_layout = QHBoxLayout()
@@ -136,30 +133,23 @@ class MusicPlayer(QWidget):
         main_layout.addWidget(self.volume_slider)
 
         self.setLayout(main_layout)
-        self.setWindowTitle("Music Player")
+        self.setWindowTitle('Music Player')
 
         # Logic
         self.play_button.clicked.connect(self.play_song)
         self.pause_button.clicked.connect(self.media_player.pause)
         self.stop_button.clicked.connect(self.media_player.stop)
         self.next_button.clicked.connect(self.play_next_song)
-        self.previous_button.clicked.connect(self.play_previous_song)
-
-        for radio_button in self.subject_radio_buttons:
-            radio_button.clicked.connect(self.update_subject)
-        for radio_button in self.genre_radio_buttons:
-            radio_button.clicked.connect(self.update_genre)
-
+        self.previous_button.clicked.connect(lambda: self.play_next_song(forward=False))
         self.load_song_list()
 
     def update_genre(self):
         """
         Update the genre based on the selected radio button.
         """
-        for radio_button in self.genre_radio_buttons:
-            if radio_button.isChecked():
-                self.genre = radio_button.text().lower()
-                break
+        self.genre = self.genre_combo_box.currentText().lower()  # CHANGE: Get the current text from the QComboBox
+        self.load_song_list()  # CHANGE: Load songs for the selected genre
+        self.play_song()
 
     def set_volume(self, value):
         """
@@ -171,37 +161,42 @@ class MusicPlayer(QWidget):
         """
         Update the current subject based on the selected radio button, reload the song list.
         """
-        for radio_button in self.subject_radio_buttons:
-            if radio_button.isChecked():
-                self.cur_subject = int(radio_button.text().split(": ")[1])
-                break
+        self.cur_subject = int(
+            self.subject_combo_box.currentText())
         self.load_song_list()
 
     def load_song_list(self):
         """
-        Load the songs related to the current subject session.
+        Load the songs related to the current subjects' session.
         """
+        # check if path exist before attempting to read
+        if not os.path.exists(f'{DATASET_DIR}/sub-00{self.cur_subject}/func/sub-001_task-Test_run-01_events.tsv'):
+            print("No songs available for this subject.")
+            return
+
         df = pd.read_csv(
-            f"dataset/sub-00{self.cur_subject}/func/sub-00{self.cur_subject}_task-Test_run-01_events.tsv",
-            sep="\t",
-        )
+            f'{DATASET_DIR}/sub-00{self.cur_subject}/func/sub-001_task-Test_run-01_events.tsv', sep='\t')
         self.song_files = {}
 
         for index, row in df.iterrows():
-            genre = row["genre"].strip("'")
-            track = row["track"]
-            start = row["start"]
-            end = row["end"]
+            genre = row['genre'].strip("'")
+            track = row['track']
+            start = row['start']
+            end = row['end']
 
             if genre not in self.song_files:
                 self.song_files[genre] = {}
 
-            self.song_files[genre][track] = {"start": start, "end": end}
+            self.song_files[genre][index] = {'track': track, 'start': start, 'end': end}
 
     def play_song(self):
         """
         Plays the first song the subject listened to in the selected genre.
         """
+        # If the player is paused, continue playing the current song
+        if self.media_player.state() == QMediaPlayer.PausedState:
+            self.media_player.play()
+            return
 
         if not self.genre:
             print("No genre selected.")
@@ -212,82 +207,51 @@ class MusicPlayer(QWidget):
             print("No songs available to play.")
             return
 
-        # Get the first song in the selected genre
+        # Get the first song and pad the string with zeros such that it adheres to the naming convention
         cur_song = list(self.song_files[self.genre].keys())[0]
-        # pad the string with zeros such that it adheres to the naming convention
         cur_song = str(cur_song).zfill(5)
 
         # Play the song
-        song_url = QUrl.fromLocalFile(
-            os.path.join(MUSIC_DIR, self.genre, f"{self.genre}.{cur_song}.wav")
-        )
-        print(f"song url: {song_url}")
-        print(f"Playing {self.genre}.{cur_song}")
+        song_url = QUrl.fromLocalFile(os.path.join(MUSIC_DIR, self.genre, f"{self.genre}.{cur_song}.wav"))
         self.media_player.setMedia(QMediaContent(song_url))
         self.media_player.play()
 
-    def play_next_song(self):
+    def play_next_song(self, forward=True):
         # Check if there are any songs in the list
-        if not self.song_files:
-            print(self.song_files)
+        if not self.song_files or not self.genre or not self.song_files[self.genre]:
             print("No songs available to play.")
             return
 
-        if self.current_song_index == len(self.song_files) - 1:
-            self.current_song_index = 0
+        # Get the list of tracks for the current genre
+        tracks = list(self.song_files[self.genre].keys())
+
+        # Find the current track index
+        current_track_index = self.current_song_index if self.current_song_index < len(tracks) else -1
+
+        if forward:
+            next_track_index = (current_track_index + 1) % len(tracks)
         else:
-            self.current_song_index += 1
+            next_track_index = (current_track_index - 1) % len(tracks)
+
+        # Get the next track
+        next_track = tracks[next_track_index]
 
         # Construct the new file name
-        next_song_file = f"{self.genre}.{str(self.current_song_index).zfill(5)}.wav"
-
-        # Check if the new file name exists in the list of songs
-        if next_song_file not in self.song_files:
-            print("No more songs available in this genre.")
-            return
+        next_song_file = f"{self.genre}.{str(next_track).zfill(5)}.wav"
 
         # Update the current song index
-        self.current_song_index = self.song_files.index(next_song_file)
+        self.current_song_index = next_track_index
 
         # Play the next song
         genre_dir = os.path.join(MUSIC_DIR, self.genre)  # Add this line
-        song_url = QUrl.fromLocalFile(
-            os.path.join(genre_dir, next_song_file)
-        )  # Modify this line
-        print(f"Playing {next_song_file}")
-        self.media_player.setMedia(QMediaContent(song_url))
-        self.media_player.play()
-
-    def play_previous_song(self):
-        # Check if there are any songs in the list
-        if not self.song_files:
-            print("No songs available to play.")
-            return
-
-        if self.current_song_index == 0:
-            self.current_song_index = len(self.song_files) - 1
-        else:
-            self.current_song_index -= 1
-
-        # Construct the new file name
-        previous_song_file = f"{self.genre}.{str(self.current_song_index).zfill(5)}.wav"
-
-        # Check if the new file name exists in the list of songs
-        if previous_song_file not in self.song_files:
-            print("No more songs available in this genre.")
-            return
-
-        # Update the current song index
-        self.current_song_index = self.song_files.index(previous_song_file)
-
-        # Play the previous song
-        genre_dir = os.path.join(MUSIC_DIR, self.genre)
-        song_url = QUrl.fromLocalFile(os.path.join(genre_dir, previous_song_file))
-        print(f"Playing {previous_song_file}")
+        song_url = QUrl.fromLocalFile(os.path.join(genre_dir, next_song_file))  # Modify this line
         self.media_player.setMedia(QMediaContent(song_url))
         self.media_player.play()
 
     def update_progress_bar(self, position):
+        """
+        Update the progress bar.
+        """
         self.playback_slider.setValue(position)
 
     def update_duration(self, duration):
@@ -301,7 +265,7 @@ class MusicPlayer(QWidget):
 class VoxelWidget(QOpenGLWidget):
     def __init__(self, parent=None):
         super(VoxelWidget, self).__init__(parent)
-        self.setFixedSize(round(1600 / 3), round(900 / 3))
+        #self.setFixedSize(round(1600 / 3), round(900 / 3))
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update)
         self.timer.start(16)  # Approximately 60 FPS
@@ -375,7 +339,7 @@ class VoxelWidget(QOpenGLWidget):
 
         print(f"Mouse dx: {mouse_dx}, Mouse dy: {mouse_dy}")
 
-        MOUSE_SENSITIVITY = 0.02  # Adjust as necessary
+        MOUSE_SENSITIVITY = 0.01  # Adjust as necessary
 
         if mouse_dx:
             self.player.rotate_yaw(delta_x=mouse_dx * MOUSE_SENSITIVITY)
@@ -384,6 +348,18 @@ class VoxelWidget(QOpenGLWidget):
 
         # Update the last position for the next call
         self.lastPos = event.pos()
+
+    def wheelEvent(self, event):
+        # Get the angle delta of the scroll wheel (in eighths of a degree)
+        angle_delta = event.angleDelta().y()
+
+        # Check if the angle delta is positive (scrolling up) or negative (scrolling down)
+        if angle_delta < 0:
+            print("Scrolled Up")
+            self.player.move_forward(1)
+        else:
+            print("Scrolled Down")
+            self.player.move_back(1)
 
 
 class MainWindow(QMainWindow):
