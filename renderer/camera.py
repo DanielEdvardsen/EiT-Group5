@@ -1,3 +1,5 @@
+import copy
+
 from settings import *
 
 
@@ -37,7 +39,37 @@ class Camera:
     def rotate_yaw(self, delta_x):
         self.yaw += delta_x
 
-    def rotate_x(self, delta_x): ...
+    def rotate_x(self, delta_x):
+        # rotate around 0, 0, 0
+        # pre_pos = self.position * 0.45
+        # self.position -= glm.vec3(pre_pos)
+        self.position = glm.rotate(
+            self.position,
+            delta_x,
+            glm.vec3(
+                0,
+                1,  # glm.cos(self.pitch - glm.pi() / 2),
+                0,  # glm.sin(self.pitch - glm.pi() / 2),
+            ),
+        )
+        # rotate yaw
+        self.rotate_yaw(-delta_x * 1.0)
+        # self.position += glm.vec3(pre_pos)
+        print(self.yaw)
+
+    def rotate_y(self, delta_y):
+        if self.pitch - delta_y > PITCH_MAX or self.pitch - delta_y < -PITCH_MAX:
+            return
+        self.position = glm.rotate(
+            self.position,
+            delta_y,
+            glm.vec3(
+                glm.cos(self.yaw - glm.pi() / 2), 0, glm.sin(self.yaw - glm.pi() / 2)
+            ),
+        )
+        # rotate pitch
+        self.rotate_pitch(delta_y * 1)
+        # self.position += glm.vec3(pre_pos)
 
     def move_left(self, velocity):
         self.position -= self.right * velocity

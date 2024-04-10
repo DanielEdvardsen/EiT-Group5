@@ -24,7 +24,7 @@ PITCH_MAX = glm.radians(89)
 # player
 PLAYER_SPEED = 0.1
 PLAYER_ROT_SPEED = 0.003
-PLAYER_POS = glm.vec3(-30, 100, -30)
+PLAYER_POS = glm.vec3(200, 0, 0)
 MOUSE_SENSITIVITY = 0.002
 
 # colors

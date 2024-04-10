@@ -105,21 +105,8 @@ def build_voxels(points, colors):
 
 
 if __name__ == "__main__":
-    color_file = open("renderer\src\input\sub-001_run-01\colors_sub-001_run-01", "rb")
-    color_arrays = pickle.load(color_file)
-    color_file.close()
-
-    coord_file = open("renderer\src\input\sub-001_run-01\coords_sub-001_run-01", "rb")
-    coord_arrays = pickle.load(coord_file)
-    coord_file.close()
-
-    for i, color_arr in enumerate(tqdm.tqdm(color_arrays)):
-        voxels = build_voxels(coord_arrays[i], color_arr)
-        mesh = build_chunk_mesh(voxels, 7)
-        np.save(f"renderer/src/sub-001/run1/activation-{i:03}.npy", mesh)
-
     # point to the numpy files containing the activated coordinates and colors
-    # this function will generate a mesh and save it to the output directory defined on line 117
+    # this function will generate a mesh and save it to the output directory
     color_file = open("renderer\src\input\sub-001_run-01\colors_sub-001_run-01", "rb")
     color_arrays = pickle.load(color_file)
     color_file.close()

@@ -35,7 +35,7 @@ class MusicPlayer(QWidget):
         # Song specifics
         self.current_song_index = 0
         self.genre = None
-        self.song_files = []
+        self.song_files = {}
 
         # Subject specifics
         self.cur_subject = 1
@@ -248,14 +248,6 @@ class MusicPlayer(QWidget):
         # Start animation
         self.voxel_widget.scene.toggle_anim(self.voxel_widget.current_time)
 
-    def pause_song(self):
-        self.media_player.pause()
-        self.voxel_widget.scene.toggle_anim(self.voxel_widget.current_time)
-
-    def stop_song(self):
-        self.media_player.stop()
-        self.voxel_widget.scene.reset()
-
     def play_next_song(self, forward=True):
         # Check if there are any songs in the list
         if not self.song_files or not self.genre or not self.song_files[self.genre]:
@@ -293,15 +285,9 @@ class MusicPlayer(QWidget):
         self.media_player.play()
 
     def update_progress_bar(self, position):
-        """
-        Update the progress bar.
-        """
         self.playback_slider.setValue(position)
 
     def update_duration(self, duration):
-        """
-        Update the duration of the song.
-        """
         self.playback_slider.setRange(0, duration)
 
 
@@ -365,18 +351,18 @@ class VoxelWidget(QOpenGLWidget):
         pass
 
     def paintGL(self):
-        # Call updateGL() to update the game logic
+        # Call to update the game logic
         self.updateGL()
         # Perform rendering here
         # self.ctx.clear(color=BG_COLOR)
         self.scene.render(self.ctx, self.current_time)
 
-        # Optionally, update the window title with FPS
-        # self.setWindowTitle(f"{1.0 / (self.delta_time + 1e-4):.0f} FPS")
-
     def keyPressEvent(self, event):
         # Handle keyboard input
         pass
+
+    def mousePressEvent(self, event):
+        self.lastPos = event.pos()
 
     def mouseMoveEvent(self, event):
         # PyQt provides the current position via event.pos()
@@ -389,9 +375,13 @@ class VoxelWidget(QOpenGLWidget):
         MOUSE_SENSITIVITY = 0.01  # Adjust as necessary
 
         if mouse_dx:
-            self.player.rotate_yaw(delta_x=mouse_dx * MOUSE_SENSITIVITY)
+            # self.player.rotate_yaw(delta_x=mouse_dx * MOUSE_SENSITIVITY)
+            self.player.rotate_x(delta_x=mouse_dx * MOUSE_SENSITIVITY)
         if mouse_dy:
-            self.player.rotate_pitch(delta_y=mouse_dy * MOUSE_SENSITIVITY)
+            # self.player.rotate_pitch(delta_y=mouse_dy * MOUSE_SENSITIVITY)
+            self.player.rotate_y(delta_y=mouse_dy * MOUSE_SENSITIVITY)
+
+        print(f"Yaw: {self.player.yaw}, Pitch: {self.player.pitch}")
 
         # Update the last position for the next call
         self.lastPos = event.pos()
@@ -402,11 +392,11 @@ class VoxelWidget(QOpenGLWidget):
 
         # Check if the angle delta is positive (scrolling up) or negative (scrolling down)
         if angle_delta < 0:
-            print("Zoom in")
-            self.player.move_forward(1)
+            self.player.move_forward(10)
         else:
-            print("Zoom out")
-            self.player.move_back(1)
+            self.player.move_back(10)
+
+        print(f"Position: {self.player.position}")
 
 
 class MainWindow(QMainWindow):

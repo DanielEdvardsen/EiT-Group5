@@ -22,7 +22,7 @@ class Scene:
 
         # the activations
         for i in range(20):
-            act = Path(f"dataset/sub-001/func/run1/activation-{i}.npy")
+            act = Path(f"dataset/sub-001/func/run1/activation-{i:03}.npy")
             self.activations.append(Chunk(self.app, act))
 
         # the brain model
