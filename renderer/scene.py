@@ -22,7 +22,7 @@ class Scene:
 
         # the activations
         for i in range(20):
-            act = Path(f'dataset/sub-001/func/run1/activation-{i}.npy')
+            act = Path(f"dataset/sub-001/func/run1/activation-{i}.npy")
             self.activations.append(Chunk(self.app, act))
 
         # the brain model
@@ -30,24 +30,23 @@ class Scene:
             self.brains.append(BrainMesh(self.app, subject_id=subject_id))
 
         # the skybox
-        #self.objects.append(SkyboxMesh(self.app))
+        # self.objects.append(SkyboxMesh(self.app))
 
-    def update(self):
-        ...
+    def update(self): ...
 
     def toggle_anim(self, time):
         if not self.play:
-            self.play = True #Play
+            self.play = True  # Play
             self.time = time
             print("Play")
         else:
-            self.play = False #Pause
+            self.play = False  # Pause
             print("Pause")
 
     def reset(self):
-        self.play = False #Pause
+        self.play = False  # Pause
         self.current_frame = 0
-    
+
     def update_subject(self, subject_id):
         self.cur_subject_id = subject_id
 
@@ -55,7 +54,6 @@ class Scene:
         for obj in self.objects:
             obj.render()
         self.brains[self.cur_subject_id - 1].render()
-
 
         if self.play:
             if elapsed - self.time >= 1.5:

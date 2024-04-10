@@ -37,8 +37,7 @@ class Camera:
     def rotate_yaw(self, delta_x):
         self.yaw += delta_x
 
-    def rotate_x(self, delta_x):
-        ...
+    def rotate_x(self, delta_x): ...
 
     def move_left(self, velocity):
         self.position -= self.right * velocity

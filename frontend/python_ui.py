@@ -4,11 +4,21 @@ import sys
 import pandas as pd
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
-                             QRadioButton, QGroupBox, QPushButton, QSlider, QLabel, QOpenGLWidget)
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QRadioButton,
+    QGroupBox,
+    QPushButton,
+    QSlider,
+    QLabel,
+    QOpenGLWidget,
+)
 
-MUSIC_DIR = '../genres_original/'
-MESH_DIR = '/3d_files/'
+MUSIC_DIR = "genres_original/"
+MESH_DIR = "/3d_files/"
 
 
 class MusicPlayer(QWidget):
@@ -110,7 +120,7 @@ class MusicPlayer(QWidget):
         main_layout.addWidget(self.volume_slider)
 
         self.setLayout(main_layout)
-        self.setWindowTitle('Music Player')
+        self.setWindowTitle("Music Player")
 
         # Logic
         self.play_button.clicked.connect(self.play_song)
@@ -156,19 +166,21 @@ class MusicPlayer(QWidget):
         Load the songs related to the current subject session.
         """
         df = pd.read_csv(
-            f'../dataset/sub-00{self.cur_subject}/func/sub-00{self.cur_subject}_task-Test_run-01_events.tsv', sep='\t')
+            f"dataset/sub-00{self.cur_subject}/func/sub-00{self.cur_subject}_task-Test_run-01_events.tsv",
+            sep="\t",
+        )
         self.song_files = {}
 
         for index, row in df.iterrows():
-            genre = row['genre'].strip("'")
-            track = row['track']
-            start = row['start']
-            end = row['end']
+            genre = row["genre"].strip("'")
+            track = row["track"]
+            start = row["start"]
+            end = row["end"]
 
             if genre not in self.song_files:
                 self.song_files[genre] = {}
 
-            self.song_files[genre][track] = {'start': start, 'end': end}
+            self.song_files[genre][track] = {"start": start, "end": end}
 
     def play_song(self):
         """
@@ -190,7 +202,9 @@ class MusicPlayer(QWidget):
         cur_song = str(cur_song).zfill(5)
 
         # Play the song
-        song_url = QUrl.fromLocalFile(os.path.join(MUSIC_DIR, self.genre, f"{self.genre}.{cur_song}.wav"))
+        song_url = QUrl.fromLocalFile(
+            os.path.join(MUSIC_DIR, self.genre, f"{self.genre}.{cur_song}.wav")
+        )
         print(f"song url: {song_url}")
         print(f"Playing {self.genre}.{cur_song}")
         self.media_player.setMedia(QMediaContent(song_url))
@@ -221,7 +235,9 @@ class MusicPlayer(QWidget):
 
         # Play the next song
         genre_dir = os.path.join(MUSIC_DIR, self.genre)  # Add this line
-        song_url = QUrl.fromLocalFile(os.path.join(genre_dir, next_song_file))  # Modify this line
+        song_url = QUrl.fromLocalFile(
+            os.path.join(genre_dir, next_song_file)
+        )  # Modify this line
         print(f"Playing {next_song_file}")
         self.media_player.setMedia(QMediaContent(song_url))
         self.media_player.play()
@@ -265,7 +281,7 @@ class MusicPlayer(QWidget):
         self.playback_slider.setRange(0, duration)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     player = MusicPlayer()
     player.show()

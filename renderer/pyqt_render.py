@@ -359,8 +359,6 @@ class VoxelWidget(QOpenGLWidget):
         self.current_time = time.time()  # You need to import time
         self.delta_time = self.current_time - self.last_time
         self.last_time = self.current_time
-        
-        
 
     def resizeGL(self, w, h):
         # Adjust the viewport and projection matrix on resize
@@ -374,7 +372,7 @@ class VoxelWidget(QOpenGLWidget):
         self.scene.render(self.ctx, self.current_time)
 
         # Optionally, update the window title with FPS
-        self.setWindowTitle(f"{1.0 / (self.delta_time + 1e-4):.0f} FPS")
+        # self.setWindowTitle(f"{1.0 / (self.delta_time + 1e-4):.0f} FPS")
 
     def keyPressEvent(self, event):
         # Handle keyboard input
@@ -424,9 +422,3 @@ if __name__ == "__main__":
     player = MusicPlayer()
     player.show()
     sys.exit(app.exec_())
-
-# if __name__ == "__main__":
-#     app = QApplication(sys.argv)
-#     window = MainWindow()
-#     window.show()
-#     sys.exit(app.exec_())
