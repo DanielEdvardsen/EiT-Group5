@@ -22,6 +22,7 @@ class VoxelEngine:
         pg.display.set_mode(WIN_RES, flags=pg.OPENGL | pg.DOUBLEBUF)
         self.ctx = mgl.create_context()
 
+        # mgl.CULL_FACE
         self.ctx.enable(flags=mgl.DEPTH_TEST | mgl.CULL_FACE | mgl.BLEND)
         self.ctx.blend_func = (mgl.SRC_ALPHA, mgl.ONE_MINUS_SRC_ALPHA)
         self.ctx.gc_mode = "auto"
@@ -44,7 +45,7 @@ class VoxelEngine:
     def update(self):
         self.player.update()
         self.shader_program.update()
-        self.scene.update()
+        self.scene.update(self.time)
 
         self.delta_time = self.clock.tick()
         self.time = pg.time.get_ticks() * 0.001
