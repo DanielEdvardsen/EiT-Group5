@@ -14,7 +14,7 @@ out vec3 voxel_color;
 void main() {
     int uv_index = 1;//gl_VertexID % 6  + (face_id & 1.0) * 6;
     voxel_color = voxel_c;
-    vec3 pos = in_position - vec3(120.0, 150.0, 150.0);
+    vec3 pos = in_position - vec3(100.0, 150.0, 115.0);
     gl_Position = m_proj * m_view * m_model * vec4(pos, 1.0);
 }
 
